@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HabitCastle — Build Your Legacy</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+:root {
+  --bg:#06070f;--panel:#0c0e1d;--panel2:#12152a;--border:#1c2040;
+  --gold:#ffd700;--gold2:#c8960c;--green:#00e676;--red:#ff1744;
+  --blue:#2979ff;--cyan:#00e5ff;--text:#cdd6f4;--dim:#50537a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'VT323',monospace;font-size:18px;min-height:100vh;overflow-x:hidden;}
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+#auth{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;}
+#auth-preview{display:block;margin-bottom:14px;image-rendering:pixelated;border-radius:0;}
+.logo{font-family:'Press Start 2P';font-size:clamp(13px,3.2vw,26px);color:var(--gold);text-shadow:0 0 30px #c8960c99,4px 4px 0 #4a2800;margin-bottom:5px;text-align:center;}
+.tagline{color:var(--dim);font-size:16px;letter-spacing:3px;margin-bottom:30px;text-align:center;}
+.box{background:var(--panel);border:2px solid var(--border);padding:26px 34px;width:min(390px,92vw);display:flex;flex-direction:column;gap:13px;}
+.tabs{display:flex;}
+.tab{flex:1;padding:9px;background:var(--bg);border:2px solid var(--border);color:var(--dim);cursor:pointer;font-family:'Press Start 2P';font-size:8px;text-align:center;transition:.15s;}
+.tab.on{background:var(--gold);color:#000;border-color:var(--gold);}
+.inp{width:100%;background:#060710;border:2px solid var(--border);color:var(--text);padding:11px 13px;font-family:'VT323';font-size:20px;outline:none;transition:.15s;}
+.inp:focus{border-color:var(--gold);}
+.inp::placeholder{color:var(--dim);}
+.btn{padding:12px;background:var(--gold);color:#000;border:none;cursor:pointer;font-family:'Press Start 2P';font-size:9px;letter-spacing:1px;box-shadow:4px 4px 0 #4a2800;transition:.1s;width:100%;}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #4a2800;}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #4a2800;}
+.btn.sec{background:var(--panel2);color:var(--text);box-shadow:4px 4px 0 #000;border:2px solid var(--border);}
+.btn.sm{font-size:7px;padding:7px 10px;}
+.btn.grn{background:var(--green);color:#000;box-shadow:4px 4px 0 #005c2e;}
+
+#app{display:none;position:relative;z-index:1;min-height:100vh;}
+.topbar{background:var(--panel);border-bottom:2px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.tlogo{font-family:'Press Start 2P';font-size:clamp(9px,1.8vw,14px);color:var(--gold);text-shadow:2px 2px 0 #4a2800;}
+.tright{display:flex;align-items:center;gap:12px;}
+.ubadge{background:#060710;border:2px solid var(--border);padding:5px 11px;font-size:14px;color:var(--cyan);}
+.main{padding:20px;max-width:1400px;margin:0 auto;}
+.stitle{font-family:'Press Start 2P';font-size:10px;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.stitle::after{content:'';flex:1;height:2px;background:linear-gradient(to right,var(--border),transparent);}
+.srow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-bottom:22px;}
+.scard{background:var(--panel);border:2px solid var(--border);padding:13px;text-align:center;}
+.sval{font-family:'Press Start 2P';font-size:clamp(13px,2.3vw,22px);color:var(--gold);display:block;}
+.slbl{color:var(--dim);font-size:13px;margin-top:3px;}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px;}
+.hcard{background:var(--panel);border:2px solid var(--border);overflow:hidden;position:relative;transition:border-color .2s;}
+.hcard:hover{border-color:var(--gold2);}
+.hcard.broken{border-color:var(--red);}
+.hcard.perfect{border-color:var(--green);}
+.hhead{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--border);background:#090a17;}
+.hname{font-family:'Press Start 2P';font-size:8px;color:var(--text);}
+.hstreak{font-family:'Press Start 2P';font-size:10px;color:var(--gold);}
+.cwrap{position:relative;background:#04050e;overflow:hidden;}
+.hcanvas{display:block;width:100%;image-rendering:pixelated;}
+.blbl{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);font-family:'Press Start 2P';font-size:6px;color:var(--gold);text-shadow:1px 1px 0 #000,-1px -1px 0 #000;white-space:nowrap;pointer-events:none;}
+.hfoot{padding:9px 13px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.logbtn{flex:1;padding:8px 6px;background:var(--green);color:#000;border:none;cursor:pointer;font-family:'Press Start 2P';font-size:6px;box-shadow:3px 3px 0 #005c2e;transition:.1s;}
+.logbtn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #005c2e;}
+.logbtn:disabled{background:var(--dim);cursor:not-allowed;box-shadow:none;transform:none;}
+.ibtn{padding:8px 7px;border:2px solid var(--border);cursor:pointer;font-size:14px;background:var(--panel2);color:var(--dim);transition:.1s;}
+.ibtn:hover{border-color:var(--gold);color:var(--gold);}
+.mcal{padding:5px 13px 9px;display:flex;flex-wrap:wrap;gap:3px;}
+.dot{width:12px;height:12px;display:inline-block;}
+.xwrap{height:5px;background:#060710;border:1px solid var(--border);margin:2px 13px 0;overflow:hidden;}
+.xbar{height:100%;background:var(--gold);transition:width .5s;}
+.ghostover{position:absolute;inset:0;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:10;}
+.gtxt{font-family:'Press Start 2P';font-size:6px;color:var(--red);text-align:center;line-height:2;}
+.addcard{background:var(--panel);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;min-height:300px;cursor:pointer;transition:.2s;flex-direction:column;gap:10px;}
+.addcard:hover{border-color:var(--gold);background:var(--panel2);}
+.addicon{font-family:'Press Start 2P';font-size:26px;color:var(--border);transition:color .2s;}
+.addcard:hover .addicon{color:var(--gold);}
+.addlbl{font-family:'Press Start 2P';font-size:7px;color:var(--dim);}
+.mover{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;}
+.mover.open{display:flex;}
+.modal{background:var(--panel);border:2px solid var(--gold);padding:26px 30px;width:min(450px,94vw);max-height:90vh;overflow-y:auto;box-shadow:8px 8px 0 var(--gold2);}
+.mtitle{font-family:'Press Start 2P';font-size:11px;color:var(--gold);margin-bottom:18px;}
+.fgrp{margin-bottom:13px;}
+.flbl{display:block;margin-bottom:5px;color:var(--dim);font-size:14px;}
+.crow{display:flex;gap:6px;flex-wrap:wrap;}
+.cswatch{width:28px;height:28px;border:3px solid transparent;cursor:pointer;transition:.1s;}
+.cswatch.sel{border-color:#fff;transform:scale(1.2);}
+.rtog{display:flex;align-items:center;gap:10px;padding:8px;background:#060710;border:2px solid var(--border);cursor:pointer;margin-bottom:6px;transition:.15s;}
+.rtog:hover{border-color:var(--gold);}
+.tbox{width:17px;height:17px;border:2px solid var(--dim);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.tbox.on{background:var(--gold);border-color:var(--gold);color:#000;}
+#notif{position:fixed;top:16px;right:16px;z-index:999;background:var(--panel);border:2px solid var(--gold);padding:11px 16px;font-family:'Press Start 2P';font-size:8px;color:var(--gold);max-width:260px;transform:translateX(120%);transition:transform .3s;box-shadow:5px 5px 0 var(--gold2);}
+#notif.show{transform:translateX(0);}
+@media(max-width:600px){.main{padding:9px;}.hgrid{grid-template-columns:1fr;}.box{padding:16px;}.modal{padding:16px;}.topbar{padding:8px 11px;}}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<div id="auth">
+  <canvas id="auth-preview" width="320" height="280"></canvas>
+  <div class="logo">🏰 HabitCastle</div>
+  <div class="tagline">BUILD YOUR LEGACY · ONE DAY AT A TIME</div>
+  <div class="box">
+    <div class="tabs">
+      <button class="tab on" onclick="switchTab('login')">LOGIN</button>
+      <button class="tab" onclick="switchTab('signup')">SIGN UP</button>
+    </div>
+    <div id="lf" style="display:flex;flex-direction:column;gap:11px;">
+      <input class="inp" id="lu" type="text" placeholder="Username" autocomplete="off">
+      <input class="inp" id="lp" type="password" placeholder="Password">
+      <button class="btn" onclick="doLogin()">⚔ ENTER THE CASTLE</button>
+    </div>
+    <div id="sf" style="display:none;flex-direction:column;gap:11px;">
+      <input class="inp" id="su" type="text" placeholder="Choose a username" autocomplete="off">
+      <input class="inp" id="sp" type="password" placeholder="Create password">
+      <input class="inp" id="sp2" type="password" placeholder="Confirm password">
+      <button class="btn" onclick="doSignup()">🏗 CREATE ACCOUNT</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="tlogo">🏰 HabitCastle</div>
+    <div class="tright">
+      <div class="ubadge" id="ubadge">HERO</div>
+      <button class="btn sec sm" onclick="doLogout()">LOGOUT</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="srow">
+      <div class="scard"><span class="sval" id="s0">0</span><div class="slbl">HABITS</div></div>
+      <div class="scard"><span class="sval" id="s1">0d</span><div class="slbl">BEST STREAK</div></div>
+      <div class="scard"><span class="sval" id="s2">0</span><div class="slbl">BLOCKS PLACED</div></div>
+      <div class="scard"><span class="sval" id="s3">🪨</span><div class="slbl">TOP BUILDING</div></div>
+    </div>
+    <div class="stitle">YOUR KINGDOMS</div>
+    <div class="hgrid" id="hgrid"></div>
+  </div>
+</div>
+
+<div class="mover" id="add-modal">
+  <div class="modal">
+    <div class="mtitle">⚔ NEW HABIT</div>
+    <div class="fgrp"><label class="flbl">HABIT NAME</label><input class="inp" id="hn" placeholder="e.g. Morning Run…" style="width:100%"></div>
+    <div class="fgrp"><label class="flbl">ICON (EMOJI)</label><input class="inp" id="hi" placeholder="🎯" style="width:100%;font-size:22px" maxlength="2"></div>
+    <div class="fgrp"><label class="flbl">BUILDING COLOR</label><div class="crow" id="crow"></div></div>
+    <div class="fgrp">
+      <label class="flbl">RULES</label>
+      <div class="rtog" onclick="toggleRule('no2')"><div class="tbox on" id="r-no2">✓</div><span>Never miss twice in a row</span></div>
+      <div class="rtog" onclick="toggleRule('wknd')"><div class="tbox" id="r-wknd"></div><span>Weekends are rest days</span></div>
+      <div class="rtog" onclick="toggleRule('cheat')"><div class="tbox on" id="r-cheat">✓</div><span>Allow cheat days (streak safe)</span></div>
+    </div>
+    <div style="display:flex;gap:9px;margin-top:5px">
+      <button class="btn grn" onclick="addHabit()">CREATE HABIT</button>
+      <button class="btn sec" onclick="closeM('add-modal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="mover" id="ghost-modal">
+  <div class="modal" style="text-align:center;border-color:var(--red)">
+    <div class="mtitle" style="color:var(--red)">⚠ STREAK BROKEN</div>
+    <canvas id="gc" width="280" height="240" style="display:block;margin:0 auto 14px;image-rendering:pixelated"></canvas>
+    <div style="font-family:'Press Start 2P';font-size:7px;color:var(--dim);line-height:2;margin-bottom:9px" id="gmsg"></div>
+    <div style="font-family:'Press Start 2P';font-size:9px;color:var(--gold);margin-bottom:16px" id="grec"></div>
+    <div style="font-family:'VT323';font-size:18px;color:var(--text);margin-bottom:16px">Your castle stands as a ghost — a monument to how far you came.<br>Start again. Build higher.</div>
+    <button class="btn" onclick="closeM('ghost-modal')">RISE AGAIN 🔥</button>
+  </div>
+</div>
+
+<div id="notif"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// STAGES
+// ══════════════════════════════════════════════════════════
+const STAGES=[
+  {min:0,  max:2,  name:'Empty Land',      emoji:'🪨'},
+  {min:3,  max:9,  name:'Stone Hut',       emoji:'🛖'},
+  {min:10, max:20, name:'Wooden House',    emoji:'🏠'},
+  {min:21, max:39, name:'Stone Manor',     emoji:'🏡'},
+  {min:40, max:69, name:'Castle',          emoji:'🏰'},
+  {min:70, max:99, name:'Grand Fortress',  emoji:'🏯'},
+  {min:100,max:999,name:'Legendary Palace',emoji:'✨'},
+];
+const COLORS=['#00cfff','#ff2d55','#00ff88','#ffcc00','#bf00ff','#ff6b00','#00e5ff','#ff0090','#aaff00','#ffd700'];
+const getStage=n=>STAGES.find(s=>n>=s.min&&n<=s.max)||STAGES[0];
+const stageIdx=n=>STAGES.findIndex(s=>n>=s.min&&n<=s.max);
+
+// ══════════════════════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════════════════════
+let CU=null,rules={no2:true,wknd:false,cheat:true},selColor=COLORS[0];
+const SU=u=>localStorage.setItem('hc_u',JSON.stringify(u));
+const LU=()=>JSON.parse(localStorage.getItem('hc_u')||'{}');
+const GD=()=>{const u=LU();return u[CU]?.data||{habits:[]};};
+const SETD=d=>{const u=LU();u[CU]={...u[CU],data:d};SU(u);};
+const today=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+
+// ══════════════════════════════════════════════════════════
+// STARS BG
+// ══════════════════════════════════════════════════════════
+(()=>{
+  const c=document.getElementById('stars'),ctx=c.getContext('2d');
+  let W,H,stars=[];
+  const init=()=>{W=c.width=innerWidth;H=c.height=innerHeight;
+    stars=Array.from({length:160},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.8+.4,a:Math.random(),da:(Math.random()-.5)*.007}));};
+  const draw=()=>{ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>{s.a=Math.max(.08,Math.min(1,s.a+s.da));if(s.a<=.08||s.a>=1)s.da*=-1;
+      ctx.globalAlpha=s.a;ctx.fillStyle='#fff';ctx.fillRect(~~s.x,~~s.y,~~s.r+1,~~s.r+1);});
+    ctx.globalAlpha=1;requestAnimationFrame(draw);};
+  init();draw();addEventListener('resize',init);
+})();
+
+// ══════════════════════════════════════════════════════════
+// PREMIUM ISOMETRIC VOXEL RENDERER — VIVID POP EDITION
+// ══════════════════════════════════════════════════════════
+const TW=22, TH=11; // Bigger tiles = chunkier, more cinematic
+
+// ── Color helpers (HSL-based to preserve saturation) ──
+const h2r=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const r2h=(r,g,b)=>`#${Math.max(0,Math.min(255,Math.round(r))).toString(16).padStart(2,'0')}${Math.max(0,Math.min(255,Math.round(g))).toString(16).padStart(2,'0')}${Math.max(0,Math.min(255,Math.round(b))).toString(16).padStart(2,'0')}`;
+
+// Convert hex → HSL, manipulate, convert back → preserves saturation!
+function hexToHSL(hex){
+  let [r,g,b]=h2r(hex);r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  let h,s,l=(max+min)/2;
+  if(max===min){h=s=0;}else{
+    const d=max-min;s=l>.5?d/(2-max-min):d/(max+min);
+    switch(max){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;default:h=((r-g)/d+4)/6;}
+  }
+  return[h*360,s*100,l*100];
+}
+function hslToHex(h,s,l){
+  s/=100;l/=100;
+  const k=n=>{const c=(n+h/30)%12,a=s*Math.min(l,1-l);return l-a*Math.max(-1,Math.min(k=>k-3,9-k,1));};
+  const f=n=>{const c=(n+h/30)%12,a=s*Math.min(l,1-l);return l-a*Math.max(Math.min(c-3,9-c,1),-1);};
+  return r2h(f(0)*255,f(8)*255,f(4)*255);
+}
+// Proper HSL manipulation
+function lightenHSL(hex,amt){const[h,s,l]=hexToHSL(hex);return hslToHex(h,Math.max(0,s-amt*.3),Math.min(98,l+amt));}
+function darkenHSL(hex,amt){const[h,s,l]=hexToHSL(hex);return hslToHex(h,s,Math.max(2,l-amt));}
+function saturate(hex,amt){const[h,s,l]=hexToHSL(hex);return hslToHex(h,Math.min(100,s+amt),l);}
+const mix=(h1,h2,t)=>{const[r1,g1,b1]=h2r(h1),[r2,g2,b2]=h2r(h2);return r2h(r1+(r2-r1)*t,g1+(g2-g1)*t,b1+(b2-b1)*t);};
+
+// Isometric transform
+function toScreen(gx,gy,gz,ox,oy){
+  return{x:ox+(gx-gy)*TW, y:oy+(gx+gy)*TH-gz*TH*2};
+}
+
+// ── DRAW ONE VOXEL CUBE — vivid pop lighting ──
+function drawCube(ctx,gx,gy,gz,hex,ox,oy,opts={}){
+  const{alpha=1,emissive=false,glowCol=null,rimlight=true,shadow=true}=opts;
+  if(alpha<=0.01)return;
+  const p=toScreen(gx,gy,gz,ox,oy);
+  const x=p.x,y=p.y;
+
+  // ── FACE COLORS: HSL-based so saturation is NEVER killed ──
+  // Top face: lightened + slightly warm-shifted, very bright
+  const topC   = emissive ? mix(hex,'#ffffff',.6)  : lightenHSL(saturate(hex,8), 28);
+  // Left face: base color, slight cool shift
+  const leftC  = emissive ? mix(hex,'#ffee88',.4)  : saturate(darkenHSL(hex,12), 5);
+  // Right face: darker, deeper shadow but still saturated (not grey!)
+  const rightC = emissive ? mix(hex,'#ff8822',.25) : saturate(darkenHSL(hex,36), 10);
+  // Specular: near-white with a hint of the hue
+  const specC  = lightenHSL(hex, 58);
+
+  ctx.globalAlpha=alpha;
+
+  // ── TOP FACE ──
+  ctx.fillStyle=topC;
+  ctx.beginPath();
+  ctx.moveTo(x,    y);
+  ctx.lineTo(x+TW, y+TH);
+  ctx.lineTo(x,    y+TH*2);
+  ctx.lineTo(x-TW, y+TH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Top face: diagonal light gradient (viewer-left = brightest)
+  if(!emissive){
+    const tg=ctx.createLinearGradient(x-TW,y+TH,x+TW,y+TH);
+    tg.addColorStop(0,'rgba(255,255,255,.28)');
+    tg.addColorStop(.5,'rgba(255,255,255,.08)');
+    tg.addColorStop(1,'rgba(0,0,10,.12)');
+    ctx.fillStyle=tg;
+    ctx.beginPath();
+    ctx.moveTo(x,y);ctx.lineTo(x+TW,y+TH);ctx.lineTo(x,y+TH*2);ctx.lineTo(x-TW,y+TH);
+    ctx.closePath();ctx.fill();
+  }
+
+  // ── SPECULAR RIDGE (top-left edge — the "Pixels movie" highlight) ──
+  if(rimlight && !emissive){
+    ctx.globalAlpha=alpha*.7;
+    ctx.fillStyle=specC;
+    ctx.beginPath();
+    ctx.moveTo(x-TW,    y+TH);
+    ctx.lineTo(x,       y);
+    ctx.lineTo(x+3,     y+2);
+    ctx.lineTo(x-TW+3,  y+TH+2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha=alpha;
+  }
+
+  // ── LEFT FACE ──
+  ctx.fillStyle=leftC;
+  ctx.beginPath();
+  ctx.moveTo(x-TW,y+TH);
+  ctx.lineTo(x,   y+TH*2);
+  ctx.lineTo(x,   y+TH*4);
+  ctx.lineTo(x-TW,y+TH*3);
+  ctx.closePath();
+  ctx.fill();
+  // Left: top-to-bottom shadow gradient
+  {const lg=ctx.createLinearGradient(x-TW,y+TH,x-TW,y+TH*4);
+  lg.addColorStop(0,'rgba(255,255,255,.06)');
+  lg.addColorStop(1,'rgba(0,0,0,.28)');
+  ctx.fillStyle=lg;
+  ctx.beginPath();ctx.moveTo(x-TW,y+TH);ctx.lineTo(x,y+TH*2);ctx.lineTo(x,y+TH*4);ctx.lineTo(x-TW,y+TH*3);ctx.closePath();ctx.fill();}
+
+  // ── RIGHT FACE ──
+  ctx.fillStyle=rightC;
+  ctx.beginPath();
+  ctx.moveTo(x,   y+TH*2);
+  ctx.lineTo(x+TW,y+TH);
+  ctx.lineTo(x+TW,y+TH*3);
+  ctx.lineTo(x,   y+TH*4);
+  ctx.closePath();
+  ctx.fill();
+  // Right: stronger shadow gradient
+  {const rg=ctx.createLinearGradient(x,y+TH,x,y+TH*4);
+  rg.addColorStop(0,'rgba(0,0,30,.08)');
+  rg.addColorStop(1,'rgba(0,0,30,.42)');
+  ctx.fillStyle=rg;
+  ctx.beginPath();ctx.moveTo(x,y+TH*2);ctx.lineTo(x+TW,y+TH);ctx.lineTo(x+TW,y+TH*3);ctx.lineTo(x,y+TH*4);ctx.closePath();ctx.fill();}
+
+  // ── COOL RIM LIGHT on bottom-right edge ──
+  if(rimlight && !emissive){
+    ctx.globalAlpha=alpha*.22;
+    ctx.strokeStyle='rgba(140,200,255,.9)';
+    ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(x+TW,y+TH);ctx.lineTo(x+TW,y+TH*3);ctx.stroke();
+    ctx.globalAlpha=alpha;
+  }
+
+  // ── EMISSIVE GLOW BLOOM ──
+  if(emissive && glowCol){
+    ctx.globalAlpha=alpha*.35;
+    const gl=ctx.createRadialGradient(x,y+TH*1.5,0,x,y+TH*1.5,TW*4.5);
+    gl.addColorStop(0,glowCol);
+    gl.addColorStop(.5,glowCol+'88');
+    gl.addColorStop(1,'transparent');
+    ctx.fillStyle=gl;
+    ctx.fillRect(x-TW*5,y-TH*3,TW*10,TH*10);
+    ctx.globalAlpha=alpha;
+  }
+
+  // ── GROUND SHADOW ──
+  if(shadow){
+    ctx.globalAlpha=alpha*.15;
+    ctx.fillStyle='#000830';
+    ctx.beginPath();
+    ctx.ellipse(x,y+TH*4+TH*.4,TW*.85,TH*.6,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha=alpha;
+  }
+
+  ctx.globalAlpha=1;
+}
+
+// ══════════════════════════════════════════════════════════
+// BUILDING BLUEPRINTS (dense, layered, premium)
+// ══════════════════════════════════════════════════════════
+function buildScene(hex,stIdx,fc){
+  // Returns sorted cube list for painter's algorithm
+  const cubes=[];
+  const push=(gx,gy,gz,h,opts={})=>cubes.push({gx,gy,gz,hex:h,...opts});
+
+  // Palette derived from base color
+  const stone='#b8ccd8', stoneDk='#7a90a0', stoneHi='#ddeeff';
+  const wood='#c4803a', woodDk='#7a4410', woodHi='#f0aa55';
+  const roofC=darkenHSL(hex,30), roofHi=lightenHSL(roofC,20);
+  const winC='#00ddff', winGlow_='#00ffff';   // bright cyan windows
+  const doorC='#150a02';
+  const goldC_='#ffd700', goldHi='#fff080';
+  const grassC='#22aa44', grassDk='#116622', grassHi='#44ee66';
+  const groundC='#5c4422', groundDk='#3a2810';
+
+  // ── GROUND LAYER ── always present
+  for(let gx=-2;gx<=6;gx++) for(let gy=-2;gy<=6;gy++){
+    const edge=(gx===-2||gx===6||gy===-2||gy===6);
+    const pat=(gx+gy)%2===0;
+    push(gx,gy,-1,edge?groundDk:(pat?grassC:grassDk),{shadow:false,rimlight:false});
+  }
+  // Grass top highlights
+  for(let gx=-1;gx<=5;gx++) for(let gy=-1;gy<=5;gy++){
+    if((gx*3+gy*7)%5===0) push(gx,gy,-.4,grassHi,{shadow:false,rimlight:false});
+  }
+
+  if(stIdx===0){
+    // EMPTY LAND: scattered foundation stones + dirt patches
+    const rubble=[[1,1],[2,0],[0,2],[2,2],[3,1],[1,3]];
+    rubble.forEach(([x,y],i)=>push(x,y,0,i%2===0?stone:stoneDk,{shadow:true}));
+    // Small rubble
+    [[.5,.5],[1.5,2.5],[2.5,1.5]].forEach(([x,y])=>push(x,y,.3,stoneDk,{shadow:false}));
+  }
+
+  else if(stIdx===1){
+    // STONE HUT — 3×3 footprint, 2 high, pitched roof
+    const W=3,D=3;
+    // Foundation
+    for(let x=0;x<W;x++) for(let y=0;y<D;y++) push(x,y,0,stone,{shadow:true});
+    // Walls (perimeter)
+    for(let x=0;x<W;x++) for(let y=0;y<D;y++){
+      if(x===0||x===W-1||y===0||y===D-1){
+        push(x,y,1,(x+y)%2===0?stone:stoneDk);
+        push(x,y,2,(x+y)%2===0?stoneDk:stone);
+      }
+    }
+    // Roof slope (stepped)
+    for(let x=0;x<W;x++) for(let y=0;y<D;y++) push(x,y,3,roofC);
+    push(1,1,4,roofHi,{rimlight:true}); // peak
+    // Door
+    push(1,2,1,doorC,{shadow:false,rimlight:false});
+    // Windows glowing
+    [[0,1,2],[2,1,2]].forEach(([x,y,z])=>push(x,y,z,winC,{emissive:true,glowCol:winGlow_,shadow:false}));
+    // Chimney
+    push(0,0,3,stoneDk);push(0,0,4,stoneDk);push(0,0,5,stone);
+    // Smoke (animated)
+    if(fc!==null){
+      const s=Math.sin(fc*.05);
+      push(-.2+s*.15,-.2+s*.1,6+s*.3,'#cccccc',{alpha:.22,shadow:false,rimlight:false});
+      push(-.4+s*.2,-.4+s*.15,7.5+s*.2,'#aaaaaa',{alpha:.12,shadow:false,rimlight:false});
+    }
+  }
+
+  else if(stIdx===2){
+    // WOODEN HOUSE — 4×3 footprint, 3 stories, dormer windows
+    const W=4,D=3;
+    for(let x=0;x<W;x++) for(let y=0;y<D;y++){
+      // Foundation
+      push(x,y,0,stone,{shadow:true});
+      // Floor 1 — stone
+      if(x===0||x===W-1||y===0||y===D-1){push(x,y,1,(x+y)%2?stone:stoneDk);push(x,y,2,(x+y)%2?stoneDk:stone);}
+      // Floor 2 — wood
+      if(x===0||x===W-1||y===0||y===D-1){push(x,y,3,(x+y)%2?wood:woodDk);push(x,y,4,(x+y)%2?woodDk:wood);}
+      // Roof
+      push(x,y,5,roofC);
+    }
+    // Roof ridge
+    for(let x=0;x<W;x++) push(x,1,6,roofHi);
+    push(1,1,7,roofHi);push(2,1,7,roofHi); // gable peaks
+    // Chimney
+    push(3,0,5,stoneDk);push(3,0,6,stoneDk);push(3,0,7,stone);push(3,0,8,stoneDk);
+    // Door (double)
+    push(1,2,1,doorC,{shadow:false,rimlight:false});push(2,2,1,doorC,{shadow:false,rimlight:false});
+    // Windows glow per floor
+    [[0,1,2],[3,1,2],[0,1,4],[3,1,4],[1,0,2],[2,0,2]].forEach(([x,y,z])=>
+      push(x,y,z,winC,{emissive:true,glowCol:winGlow_,shadow:false}));
+    // Floor beams (decorative wood strips)
+    for(let x=0;x<W;x++) push(x,0,2.6,woodHi,{shadow:false,rimlight:false});
+    for(let x=0;x<W;x++) push(x,D-1,2.6,woodHi,{shadow:false,rimlight:false});
+    // Smoke
+    if(fc!==null){
+      const s=Math.sin(fc*.055+1);
+      push(3.1+s*.1,-.2,9+s*.35,'#bbbbcc',{alpha:.2,shadow:false,rimlight:false});
+      push(3.2+s*.15,-.4,11+s*.2,'#aaaaaa',{alpha:.11,shadow:false,rimlight:false});
+    }
+  }
+
+  else if(stIdx===3){
+    // STONE MANOR — 5×4 body + 2 side turrets, crenellations, courtyard
+    const W=5,D=4;
+    for(let x=0;x<W;x++) for(let y=0;y<D;y++){
+      push(x,y,0,stone);
+      for(let z=1;z<=5;z++){
+        if(x===0||x===W-1||y===0||y===D-1)
+          push(x,y,z,(x*2+y+z)%3===0?stoneDk:(x*2+y+z)%3===1?stone:stoneHi);
+      }
+      push(x,y,6,roofC);
+    }
+    // Crenellations on roof
+    for(let x=0;x<W;x+=2){push(x,-1,6,stone);push(x,D,6,stone);}
+    for(let y=0;y<D;y+=2){push(-1,y,6,stone);push(W,y,6,stone);}
+    // Left tower: 2×2, taller
+    for(let tx=-2;tx<0;tx++) for(let ty=1;ty<3;ty++){
+      push(tx,ty,0,stoneDk);
+      for(let z=1;z<=8;z++) push(tx,ty,z,(tx+ty+z)%2===0?stoneDk:stone);
+      push(tx,ty,9,roofC);push(tx,ty,10,darkenHSL(roofC,15));
+    }
+    push(-1,1,11,roofHi);// turret tip
+    // Right tower
+    for(let tx=W;tx<W+2;tx++) for(let ty=1;ty<3;ty++){
+      push(tx,ty,0,stoneDk);
+      for(let z=1;z<=8;z++) push(tx,ty,z,(tx+ty+z)%2===0?stoneDk:stone);
+      push(tx,ty,9,roofC);push(tx,ty,10,darkenHSL(roofC,15));
+    }
+    push(W,1,11,roofHi);
+    // Gate
+    push(2,D-1,1,doorC,{shadow:false,rimlight:false});push(2,D-1,2,doorC,{shadow:false,rimlight:false});
+    push(3,D-1,1,doorC,{shadow:false,rimlight:false});push(3,D-1,2,doorC,{shadow:false,rimlight:false});
+    // Portcullis arch
+    push(2,D-1,3,stone);push(3,D-1,3,stone);push(2.5,D-1,3.5,stoneDk);
+    // Windows
+    [[0,1,3],[0,2,3],[W-1,1,3],[W-1,2,3],[1,0,3],[2,0,3],[3,0,3],[1,D-1,4],[3,D-1,4]].forEach(([x,y,z])=>
+      push(x,y,z,winC,{emissive:true,glowCol:winGlow_,shadow:false}));
+    // Flags
+    if(fc!==null){
+      const w=Math.sin(fc*.08);
+      push(-1.5+w*.2,2,12,'#dd1111',{shadow:false,rimlight:false});
+      push(W-.5+w*.2,2,12,'#dd1111',{shadow:false,rimlight:false});
+      // Flag poles
+      push(-1,1.5,11,'#555555',{shadow:false,rimlight:false});
+      push(W,1.5,11,'#555555',{shadow:false,rimlight:false});
+    }
+    // Decorative banners on walls
+    [[0,1,5],[0,2,5],[W-1,1,5],[W-1,2,5]].forEach(([x,y,z])=>
+      push(x,y,z,darkenHSL(hex,8),{shadow:false}));
+  }
+
+  else if(stIdx>=4){
+    const isLeg=(stIdx>=6), isFort=(stIdx>=5);
+    // CASTLE / FORTRESS / PALACE
+    // Outer walls 7×6
+    const OW=7,OD=6;
+    for(let x=0;x<OW;x++) for(let y=0;y<OD;y++){
+      push(x,y,0,stone);
+      if(x===0||x===OW-1||y===0||y===OD-1){
+        for(let z=1;z<=4;z++) push(x,y,z,(x+y*2+z)%3===0?stoneDk:(x+y*2+z)%3===1?stone:stoneHi);
+      }
+    }
+    // Outer wall crenellations
+    for(let x=0;x<OW;x+=2) push(x,-1,4,stone);
+    for(let x=1;x<OW;x+=2) push(x,OD,4,stone);
+    for(let y=0;y<OD;y+=2){push(-1,y,4,stone);push(OW,y,4,stone);}
+
+    // 4 corner towers (2×2, very tall)
+    [[0,0],[0,OD-2],[OW-2,0],[OW-2,OD-2]].forEach(([tx,ty],ti)=>{
+      for(let dx=0;dx<2;dx++) for(let dy=0;dy<2;dy++){
+        push(tx+dx,ty+dy,0,stoneDk);
+        for(let z=1;z<=10;z++) push(tx+dx,ty+dy,z,(tx+ty+z+dx+dy)%3===0?stoneDk:(tx+ty+z+dx+dy)%3===1?stone:stoneHi);
+        // Tower roof
+        push(tx+dx,ty+dy,11,roofC);push(tx+dx,ty+dy,12,darkenHSL(roofC,20));
+      }
+      // Tower peak spire
+      push(tx+.5,ty+.5,13,isLeg?goldHi:roofHi,{rimlight:true});
+      push(tx+.5,ty+.5,14,isLeg?goldC_:darkenHSL(roofC,8),{rimlight:true});
+      // Tower windows
+      [[tx,ty+1,6],[tx+1,ty,6],[tx,ty,8],[tx+1,ty+1,8]].forEach(([x,y,z])=>
+        push(x,y,z,winC,{emissive:true,glowCol:winGlow_,shadow:false}));
+    });
+
+    // Central keep (3×2, tallest) — the hero piece
+    const KX=2,KY=2,KW=3,KD=2;
+    for(let x=KX;x<KX+KW;x++) for(let y=KY;y<KY+KD;y++){
+      push(x,y,0,stoneHi);
+      for(let z=1;z<=14;z++) push(x,y,z,(x+y+z)%3===0?stoneHi:(x+y+z)%3===1?stone:stoneDk);
+      // Keep roof
+      push(x,y,15,isLeg?goldC_:roofC);push(x,y,16,isLeg?goldHi:roofHi);
+    }
+    // Keep crenellations
+    for(let x=KX;x<KX+KW;x++){push(x,KY-1,15,stone);push(x,KY+KD,15,stone);}
+    for(let y=KY;y<KY+KD;y++){push(KX-1,y,15,stone);push(KX+KW,y,15,stone);}
+    // Keep spire (tall)
+    push(KX+1,KY,17,isLeg?goldC_:darkenHSL(roofC,15),{rimlight:true});
+    push(KX+1,KY,18,isLeg?goldHi:roofHi,{rimlight:true});
+    push(KX+1,KY,19,isLeg?'#fffacc':roofHi,{rimlight:true,shadow:false});
+    push(KX+1,KY,20,isLeg?'#ffffff':stoneHi,{rimlight:true,shadow:false});
+
+    // Keep windows (large, glowing)
+    [[KX,KY,8],[KX+1,KY,8],[KX+2,KY,8],
+     [KX,KY+1,8],[KX+1,KY+1,8],[KX+2,KY+1,8],
+     [KX,KY,12],[KX+2,KY,12],[KX,KY+1,12],[KX+2,KY+1,12]].forEach(([x,y,z])=>
+      push(x,y,z,isLeg?'#ffd080':winC,{emissive:true,glowCol:isLeg?'#ffc040':winGlow_,shadow:false}));
+
+    // Gate in front wall (center)
+    const GX=3;
+    for(let z=1;z<=3;z++){
+      push(GX,OD-1,z,doorC,{shadow:false,rimlight:false});
+      push(GX+1,OD-1,z,doorC,{shadow:false,rimlight:false});
+    }
+    // Gate arch
+    push(GX-.5,OD-1,4,stone);push(GX+1.5,OD-1,4,stone);
+    push(GX,OD-1,4,darkenHSL(stoneHi,15));push(GX+1,OD-1,4,darkenHSL(stoneHi,15));
+    // Drawbridge (wood planks)
+    for(let x=GX;x<=GX+1;x++) push(x,OD-.5,.2,woodHi,{shadow:false});
+    for(let x=GX;x<=GX+1;x++) push(x,OD+.5,-.6,wood,{shadow:true});
+
+    // Torches on gate (emissive, flickering)
+    if(fc!==null){
+      const fl=.7+Math.sin(fc*.18)*.3;
+      push(GX-1,OD-1,3,'#ff8800',{emissive:true,glowCol:'#ff6600',alpha:fl*.95,shadow:false});
+      push(GX+2,OD-1,3,'#ff8800',{emissive:true,glowCol:'#ff6600',alpha:fl*.9,shadow:false});
+    }
+
+    // Side wall windows
+    for(let y=1;y<OD-1;y+=2){
+      push(0,y,3,winC,{emissive:true,glowCol:winGlow_,shadow:false});
+      push(OW-1,y,3,winC,{emissive:true,glowCol:winGlow_,shadow:false});
+    }
+    for(let x=1;x<OW-1;x+=2){
+      push(x,0,3,winC,{emissive:true,glowCol:winGlow_,shadow:false});
+    }
+
+    // Fortress: extra mid-wall towers
+    if(isFort){
+      [[0,OD/2-1],[OW-1,OD/2-1]].forEach(([tx,ty])=>{
+        for(let z=4;z<=7;z++) push(tx,ty,z,(z%2===0)?stoneDk:stone);
+        push(tx,ty,8,roofC);push(tx,ty,7,winC,{emissive:true,glowCol:winGlow_,shadow:false});
+      });
+    }
+
+    // Animated flags on all corner towers
+    if(fc!==null){
+      const w=Math.sin(fc*.07);
+      [[0,0],[0,OD-2],[OW-2,0],[OW-2,OD-2]].forEach(([tx,ty],i)=>{
+        const ww=Math.sin(fc*.07+i*1.1);
+        push(tx+.5+ww*.25,ty,15,isLeg?goldC_:'#dd1111',{shadow:false,rimlight:false,alpha:.95});
+      });
+      // Main flag on keep
+      const mw=Math.sin(fc*.09);
+      push(KX+1+mw*.3,KY,21,isLeg?goldHi:'#ff2222',{shadow:false,rimlight:true,alpha:.9});
+    }
+
+    // Legendary: orbiting golden stars + aura cubes
+    if(isLeg && fc!==null){
+      for(let i=0;i<6;i++){
+        const a=fc*.025+i*(Math.PI*2/6);
+        const fx=KX+1.5+Math.cos(a)*3.5;
+        const fy=KY+Math.sin(a)*2;
+        const fz=12+Math.sin(fc*.04+i)*2.5;
+        push(fx,fy,fz,i%2===0?goldC_:goldHi,{emissive:true,glowCol:'#ffe040',shadow:false,rimlight:true,alpha:.85});
+      }
+      // Ground aura glow
+      for(let x=1;x<OW-1;x++) for(let y=1;y<OD-1;y++){
+        if((x+y)%3===0) push(x,y,0,goldC_,{alpha:.07,shadow:false,rimlight:false});
+      }
+    }
+  }
+
+  // Painter's sort: back→front: increasing (gx+gy), then increasing gz
+  cubes.sort((a,b)=>{
+    const da=a.gx+a.gy, db=b.gx+b.gy;
+    return da!==db?da-db:a.gz-b.gz;
+  });
+  return cubes;
+}
+
+// ══════════════════════════════════════════════════════════
+// SCENE RENDER — POP VIVID EDITION
+// ══════════════════════════════════════════════════════════
+function renderScene(canvas,hex,streak,fc,ghost){
+  const W=canvas.width,H=canvas.height;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  // ── SKY: deep cosmic, colour-tinted by the habit's hue ──
+  const[hh,hs,hl]=hexToHSL(hex);
+  const skyTop=`hsl(${hh},30%,4%)`;
+  const skyBot=`hsl(${hh},22%,9%)`;
+  const sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,skyTop);sky.addColorStop(1,skyBot);
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+
+  // ── AURORA GLOW in background (gentle colour wash) ──
+  if(fc!==null){
+    const aph=.04+Math.sin(fc*.015)*.025;
+    const ag=ctx.createRadialGradient(W*.5,H*.3,20,W*.5,H*.3,W*.7);
+    ag.addColorStop(0,`hsla(${hh},90%,55%,${aph})`);
+    ag.addColorStop(1,'transparent');
+    ctx.fillStyle=ag;ctx.fillRect(0,0,W,H);
+  }
+
+  // ── MOON ──
+  const mx=W*.84,my=H*.1;
+  const halo=ctx.createRadialGradient(mx,my,3,mx,my,22);
+  halo.addColorStop(0,'rgba(255,255,200,.2)');halo.addColorStop(1,'transparent');
+  ctx.fillStyle=halo;ctx.fillRect(mx-24,my-24,48,48);
+  ctx.fillStyle='#fffce0';ctx.fillRect(mx-5,my-5,12,12);
+  ctx.fillStyle=skyTop;ctx.fillRect(mx-2,my-6,10,10);
+
+  // ── STARS — twinkling ──
+  const spos=[[.08,.07],[.22,.04],[.5,.1],[.72,.03],[.9,.15],[.04,.2],[.62,.06],[.18,.16],[.85,.07],[.4,.03],[.3,.22],[.78,.18]];
+  spos.forEach(([fx,fy],i)=>{
+    const a=.3+Math.sin((fc||0)*.005+i*1.3)*.4;
+    ctx.globalAlpha=Math.max(0,a);ctx.fillStyle='#fffce8';
+    ctx.fillRect(~~(fx*W),~~(fy*H),i%4===0?2:1,i%4===0?2:1);
+  });
+  ctx.globalAlpha=1;
+
+  // ── IDLE BOB — smooth sinusoidal breathing ──
+  const bob=fc!==null?Math.sin(fc*.022)*3.5:0;
+  const si=stageIdx(streak);
+  const cubes=buildScene(hex,si,fc);
+  const ox=W*.5,oy=H*.7+bob;
+
+  // ── DRAW SCENE ──
+  cubes.forEach(c=>{
+    drawCube(ctx,c.gx,c.gy,c.gz,c.hex,ox,oy,{
+      alpha:ghost?Math.min(c.alpha??1,.15):(c.alpha??1),
+      emissive:!!c.emissive,glowCol:c.glowCol||null,
+      rimlight:c.rimlight!==false,shadow:c.shadow!==false
+    });
+  });
+
+  // ── GHOST TINT ──
+  if(ghost){ctx.fillStyle=`hsla(220,80%,55%,.18)`;ctx.fillRect(0,0,W,H);}
+
+  // ── BOTTOM FOG ──
+  const fog=ctx.createLinearGradient(0,H*.65,0,H);
+  fog.addColorStop(0,'transparent');
+  fog.addColorStop(1,`hsla(${hh},30%,3%,.75)`);
+  ctx.fillStyle=fog;ctx.fillRect(0,0,W,H);
+
+  // ── BLOOM PASS (self-composite) — makes emissives glow ──
+  ctx.save();
+  ctx.globalCompositeOperation='screen';
+  ctx.globalAlpha=.14;
+  ctx.filter='blur(10px)';
+  ctx.drawImage(canvas,0,0);
+  ctx.filter='none';
+  ctx.globalAlpha=1;
+  ctx.globalCompositeOperation='source-over';
+  ctx.restore();
+
+  // Second lighter bloom pass
+  ctx.save();
+  ctx.globalCompositeOperation='screen';
+  ctx.globalAlpha=.07;
+  ctx.filter='blur(22px)';
+  ctx.drawImage(canvas,0,0);
+  ctx.filter='none';
+  ctx.globalAlpha=1;
+  ctx.globalCompositeOperation='source-over';
+  ctx.restore();
+
+  // ── VIVID FLOATING PARTICLES ──
+  if(fc!==null && si>=1){
+    const pCount=[0,4,8,12,18,24,32][Math.min(si,6)];
+    // Multiple particle colours for pop effect
+    const pcols=[
+      `hsl(${hh},100%,70%)`,
+      `hsl(${(hh+60)%360},100%,75%)`,
+      `hsl(${(hh+180)%360},100%,70%)`,
+      '#ffffff'
+    ];
+    for(let i=0;i<pCount;i++){
+      const speed=.006+i*.0015;
+      const t=((fc*speed)+i*(1/pCount))%1;
+      // Spiral upward pattern
+      const angle=i*(Math.PI*2/pCount)+fc*.012;
+      const radius=TW*(1.5+Math.sin(i*1.7)*.8);
+      const px=ox+Math.cos(angle)*radius + Math.sin(fc*.02+i)*8;
+      const py=oy-t*H*.6+Math.sin(fc*.025+i*1.3)*6;
+      // Fade in/out at top and bottom
+      const pa=(t<.12?t/.12:(t>.8?(1-t)/.2:1))*.75;
+      if(pa<=0)continue;
+      const pc=pcols[i%pcols.length];
+      const ps=i%5===0?3:i%3===0?2:1.5;
+      ctx.globalAlpha=pa;
+      ctx.fillStyle=pc;
+      // Glowing particle dot
+      const pg=ctx.createRadialGradient(px,py,0,px,py,ps*2.5);
+      pg.addColorStop(0,pc);pg.addColorStop(1,'transparent');
+      ctx.fillStyle=pg;
+      ctx.fillRect(px-ps*2.5,py-ps*2.5,ps*5,ps*5);
+      // Solid core
+      ctx.fillStyle=pc;
+      ctx.fillRect(~~(px-ps/2),~~(py-ps/2),~~ps+1,~~ps+1);
+    }
+    ctx.globalAlpha=1;
+  }
+
+  // ── SCANLINE SHIMMER (very subtle — adds cinematic texture) ──
+  if(si>=2){
+    const shimAlpha=.025+Math.sin((fc||0)*.04)*.01;
+    ctx.globalAlpha=shimAlpha;
+    ctx.fillStyle='rgba(255,255,255,1)';
+    for(let sy=0;sy<H;sy+=4) ctx.fillRect(0,sy,W,.5);
+    ctx.globalAlpha=1;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ANIMATION LOOP
+// ══════════════════════════════════════════════════════════
+let FC=0,animGo=false;
+const goldC='#ffd700', winGlow='#00eeff';
+function startAnim(){
+  if(animGo)return;animGo=true;
+  (function loop(){
+    FC++;
+    // Habit canvases
+    document.querySelectorAll('.hcanvas[data-hid]').forEach(cv=>{
+      const h=GD().habits.find(x=>x.id===+cv.dataset.hid);
+      if(h) renderScene(cv,h.color,h.streak,FC,false);
+    });
+    // Auth preview
+    const ap=document.getElementById('auth-preview');
+    if(ap&&document.getElementById('auth').style.display!=='none')
+      renderScene(ap,'#ffd700',55,FC,false);
+    requestAnimationFrame(loop);
+  })();
+}
+
+// ══════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',(t==='login'?i===0:i===1)));
+  document.getElementById('lf').style.display=t==='login'?'flex':'none';
+  document.getElementById('sf').style.display=t==='signup'?'flex':'none';
+}
+function doLogin(){
+  const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;
+  if(!u||!p){notif('Fill in all fields!');return;}
+  const us=LU();
+  if(!us[u]||us[u].password!==btoa(p)){notif('Wrong username or password!');return;}
+  CU=u;sessionStorage.setItem('hc_s',u);enterApp();
+}
+function doSignup(){
+  const u=document.getElementById('su').value.trim(),p=document.getElementById('sp').value,p2=document.getElementById('sp2').value;
+  if(!u||!p||!p2){notif('Fill in all fields!');return;}
+  if(p!==p2){notif("Passwords don't match!");return;}
+  if(u.length<3){notif('Username too short!');return;}
+  const us=LU();if(us[u]){notif('Username taken!');return;}
+  us[u]={password:btoa(p),data:{habits:[]}};SU(us);
+  CU=u;sessionStorage.setItem('hc_s',u);enterApp();
+}
+function doLogout(){CU=null;sessionStorage.removeItem('hc_s');document.getElementById('app').style.display='none';document.getElementById('auth').style.display='flex';}
+function enterApp(){
+  document.getElementById('auth').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('ubadge').textContent=CU.toUpperCase();
+  renderHabits();updateStats();startAnim();
+}
+
+// ══════════════════════════════════════════════════════════
+// HABIT MANAGEMENT
+// ══════════════════════════════════════════════════════════
+function openAdd(){
+  document.getElementById('hn').value='';document.getElementById('hi').value='🎯';
+  rules={no2:true,wknd:false,cheat:true};updateRules();selColor=COLORS[0];renderColors();
+  document.getElementById('add-modal').classList.add('open');
+}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+function renderColors(){
+  const row=document.getElementById('crow');row.innerHTML='';
+  COLORS.forEach(c=>{const s=document.createElement('div');s.className='cswatch'+(c===selColor?' sel':'');s.style.background=c;s.onclick=()=>{selColor=c;renderColors();};row.appendChild(s);});
+}
+function toggleRule(k){rules[k]=!rules[k];const el=document.getElementById('r-'+k);el.classList.toggle('on',rules[k]);el.textContent=rules[k]?'✓':'';}
+function updateRules(){['no2','wknd','cheat'].forEach(k=>{const el=document.getElementById('r-'+k);el.classList.toggle('on',!!rules[k]);el.textContent=rules[k]?'✓':'';});}
+function addHabit(){
+  const name=document.getElementById('hn').value.trim(),icon=document.getElementById('hi').value.trim()||'🎯';
+  if(!name){notif('Give your habit a name!');return;}
+  const d=GD();
+  d.habits.push({id:Date.now(),name,icon,color:selColor,rules:{...rules},streak:0,bestStreak:0,totalBlocks:0,logs:{},ghostActive:false,createdAt:today()});
+  SETD(d);closeM('add-modal');renderHabits();updateStats();notif(`${icon} ${name} created!`);
+}
+function deleteHabit(id){
+  if(!confirm('Delete this habit? Castle lost forever.'))return;
+  const d=GD();d.habits=d.habits.filter(h=>h.id!==id);SETD(d);renderHabits();updateStats();notif('Habit deleted.');
+}
+
+// ══════════════════════════════════════════════════════════
+// LOGGING
+// ══════════════════════════════════════════════════════════
+function logHabit(id,type='done'){
+  const d=GD(),h=d.habits.find(x=>x.id===id);if(!h)return;
+  const t=today();
+  if(h.logs[t]==='done'&&type==='done'){notif('Already logged today ✓');return;}
+  if(h.logs[t]===type){notif('Already logged!');return;}
+  h.logs[t]=type;
+  if(type==='done'){
+    h.streak++;h.totalBlocks++;if(h.streak>h.bestStreak)h.bestStreak=h.streak;h.ghostActive=false;
+    notif(`+1 block 🧱  Streak: ${h.streak} · ${getStage(h.streak).emoji} ${getStage(h.streak).name}`);
+  } else if(type==='cheat') notif('Cheat day 😈 Streak safe!');
+  else notif('Rest day 💤 Keep going!');
+  SETD(d);renderHabits();updateStats();
+}
+function missHabit(id){
+  const d=GD(),h=d.habits.find(x=>x.id===id);if(!h)return;
+  const t=today();if(h.logs[t]){notif('Already logged today.');return;}
+  const prev=h.streak;h.logs[t]='miss';
+  if(prev>2){h.ghostActive=true;const best=h.bestStreak;h.streak=0;SETD(d);showGhost(h,prev,best);}
+  else{h.streak=0;SETD(d);notif('Missed. Build again tomorrow 💪');}
+  renderHabits();updateStats();
+}
+function showGhost(habit,lost,best){
+  const gc=document.getElementById('gc');
+  renderScene(gc,habit.color,lost,null,true);
+  document.getElementById('gmsg').innerHTML=`YOU MISSED ${habit.icon} ${habit.name.toUpperCase()}<br>STREAK BROKEN AT ${lost} DAYS`;
+  document.getElementById('grec').textContent=`YOUR BEST: ${best} DAYS — ${getStage(best).emoji} ${getStage(best).name}`;
+  document.getElementById('ghost-modal').classList.add('open');
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER UI
+// ══════════════════════════════════════════════════════════
+function renderHabits(){
+  const d=GD(),grid=document.getElementById('hgrid');grid.innerHTML='';
+  d.habits.forEach(h=>{
+    const stage=getStage(h.streak),t=today(),doneT=(h.logs[t]==='done');
+    let dots='';
+    for(let i=27;i>=0;i--){
+      const dt=new Date();dt.setDate(dt.getDate()-i);
+      const ds=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      const lg=h.logs[ds];let col='#0e1020';
+      if(lg==='done')col=h.color;else if(lg==='cheat')col='#ff8800';else if(lg==='rest')col='#2979ff';else if(lg==='miss')col='#ff1744';
+      dots+=`<span class="dot" style="background:${col};${lg?'box-shadow:0 0 4px '+col+';':''}"></span>`;
+    }
+    const ni=stageIdx(h.streak),ns=STAGES[Math.min(ni+1,STAGES.length-1)];
+    const pct=Math.min(100,~~(((h.streak-stage.min)/(stage.max-stage.min+1))*100));
+    const card=document.createElement('div');
+    card.className=`hcard${doneT?' perfect':''}${h.ghostActive?' broken':''}`;
+    card.dataset.habitId=h.id;
+    card.innerHTML=`
+      <div class="hhead">
+        <div class="hname">${h.icon} ${h.name.toUpperCase()}</div>
+        <div class="hstreak">🔥${h.streak}</div>
+      </div>
+      <div class="cwrap">
+        <canvas class="hcanvas" data-hid="${h.id}" width="320" height="260" style="width:100%;display:block;image-rendering:pixelated"></canvas>
+        <div class="blbl">${stage.emoji} ${stage.name.toUpperCase()}</div>
+        ${h.ghostActive?`<div class="ghostover">
+          <div class="gtxt">⚠ STREAK BROKEN<br>BEST: ${h.bestStreak} DAYS</div>
+          <div style="font-family:'Press Start 2P';font-size:8px;color:var(--gold)">${getStage(h.bestStreak).emoji} ${getStage(h.bestStreak).name}</div>
+          <button class="btn sm" style="margin-top:5px;width:auto" onclick="logHabit(${h.id},'done')">🔥 RESTART</button>
+        </div>`:''}
+      </div>
+      <div style="padding:4px 13px 0">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:3px">
+          <span>→ ${ns.emoji} ${ns.name}</span><span>${pct}%</span>
+        </div>
+        <div class="xwrap"><div class="xbar" style="width:${pct}%"></div></div>
+      </div>
+      <div class="mcal">${dots}</div>
+      <div class="hfoot">
+        <button class="logbtn" onclick="logHabit(${h.id},'done')" ${doneT?'disabled':''}>${doneT?'✓ DONE':'✓ LOG TODAY'}</button>
+        <button class="ibtn" onclick="logHabit(${h.id},'cheat')" title="Cheat day">😈</button>
+        <button class="ibtn" onclick="logHabit(${h.id},'rest')" title="Rest day">💤</button>
+        <button class="ibtn" onclick="missHabit(${h.id})" title="Missed today" style="color:var(--red)">✗</button>
+        <button class="ibtn" onclick="deleteHabit(${h.id})" title="Delete" style="color:#444">🗑</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+  const add=document.createElement('div');add.className='addcard';add.onclick=openAdd;
+  add.innerHTML='<div class="addicon">+</div><div class="addlbl">NEW HABIT</div>';
+  grid.appendChild(add);
+}
+function updateStats(){
+  const hs=GD().habits;
+  document.getElementById('s0').textContent=hs.length;
+  document.getElementById('s1').textContent=hs.reduce((m,h)=>Math.max(m,h.bestStreak),0)+'d';
+  document.getElementById('s2').textContent=hs.reduce((s,h)=>s+h.totalBlocks,0);
+  document.getElementById('s3').textContent=getStage(hs.reduce((t,h)=>{const s=getStage(h.streak);return s.min>getStage(t).min?h.streak:t;},0)).emoji;
+}
+let NT;
+function notif(msg){const el=document.getElementById('notif');el.textContent=msg;el.classList.add('show');clearTimeout(NT);NT=setTimeout(()=>el.classList.remove('show'),3000);}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+renderColors();updateRules();startAnim();
+const ss=sessionStorage.getItem('hc_s');
+if(ss){const us=LU();if(us[ss]){CU=ss;enterApp();}}
+</script>
+</body>
+</html>
